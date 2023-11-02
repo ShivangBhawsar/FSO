@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 
 const app = express()
@@ -7,6 +8,8 @@ const cors = require('cors')
 app.use(cors())
 
 app.use(express.static('dist'))
+
+const Note = require('./models/note')
 
 let notes = [
     {
@@ -42,7 +45,9 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/notes', (request, response) => {
-    response.json(notes)
+    Note.find({}).then(notes => {
+        response.json(notes)
+    })
 })
 
 app.get('/api/notes/:id', (request, response) => {
@@ -96,23 +101,23 @@ app.post('/api/notes', (request, response) => {
 app.put('/api/notes/:id', (request, response) => {
     const id = Number(request.params.id);
     const updatedNote = request.body;
-  
+
     // Find the index of the note with the given ID
     const noteIndex = notes.findIndex(note => note.id === id);
-  
+
     if (noteIndex === -1) {
-      return response.status(404).json({ error: 'Note not found' });
+        return response.status(404).json({ error: 'Note not found' });
     }
-  
+
     // Update the note with the new data
     notes[noteIndex] = {
-      id,
-      content: updatedNote.content,
-      important: updatedNote.important || false,
+        id,
+        content: updatedNote.content,
+        important: updatedNote.important || false,
     };
-  
+
     response.json(notes[noteIndex]);
-  });
+});
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
@@ -120,7 +125,7 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+    console.log(`Server running on port ${PORT}`)
 })
